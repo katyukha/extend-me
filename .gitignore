@@ -1,0 +1,10 @@
+*.pyc
+*.swo
+*.swp
+*.log
+/.ropeproject/
+/build/
+/dist/
+/docs/build/
+/venv/
+.ropeproject
