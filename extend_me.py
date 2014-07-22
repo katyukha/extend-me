@@ -1,3 +1,71 @@
+"""
+Extend Me - Class based extension/plugin library
+================================================
+
+This module provides mechanism of extension of your application
+based on 'extension via inheritance'. Under this words I mean
+ability to define new extensions of application objects simply
+by subclassing of extensible classes of app.
+
+For example we have app with class 'Worker' which we would like
+to make extensible (allowing third party modules to extend or
+change its behavior). Thinking strait, there are a lot of work
+to be done, to impelement mechanism of loading, registering,
+end enabling extension, with lot of glue code, which must define
+some entry points to connect extension and main app. But why not
+make it simpler, supposing that any subclass of 'Worker' will
+extend it? And this module provides implementation of this
+in two ways:
+
+    - Explicit (by using metaclass *ExtensibleType* directly)
+        - When using this way You will heve seperatly Base class
+        to be subclassed by extension classes and class getter
+        which will construct class based on all defined extensions
+        using multiple inhertance
+
+    - Implicit (by using Extensible class which use metaclass
+        magic implicitly)
+        - *Extensible* class takes care of all metaclass magic
+        related to generation objects of correct class
+
+
+How it Works
+------------
+
+Metaclass (*ExtensibleType*) tracks all subclasses of class it
+is applied to, and provides method to build class based on all
+subclasses of base class, thus using all functionality of all
+subclasses. Thus generation of correct class is separate process
+which should be used everywhere where extensible class is requred.
+
+To simplify this class *Extensible* was implemented. It has redefined
+method *__new__* which automaticaly creates instances of correct class
+(class that inherited from base class and all its extensions')
+
+
+Class reference and usage
+-------------------------
+"""
+#
+# Copyright (C) 2014  Dmytro Katyukha
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+__author__ = "Dmytro Katyukha <firemage.dima@gmail.com>"
+__version__ = "1.0.0"
+
 import six
 __all__ = ('ExtensibleType', 'Extensible')
 
@@ -7,7 +75,7 @@ class ExtensibleType(type):
 
         To make object (class) extendable just use this as metaclass:
 
-            >>> import six
+            >>> import six  # Used for Python 2/3 compatability
             >>> # Generate metaclass to be used:
             >>> mc = ExtensibleType._("MyClassName")
 
@@ -170,8 +238,8 @@ class Extensible(object):
 
         So as we see, we could extend any objects derived from Extensible class using simple
         inheritence with out any long code. This is useful for plugin or extension systems,
-        making extension work when it just imported. But as disadvantages of this approach,
-        When we try to accec attributes of extensions from base class we will get error:
+        making extension work when it just imported. But as disadvantage of this approach,
+        when we ll get error when we try to access attributes of extensions from base class:
 
             >>> MyClass.my_attr
             Traceback (most recent call last):
@@ -184,7 +252,7 @@ class Extensible(object):
             AttributeError: type object 'MyClass' has no attribute 'my_method'
 
         This happens because Extension class implements some black magic using inheritance and metaclasses.
-        Extension class have overridden __new__ method in the way when it creates instance not of base class
+        Extensible class have overridden __new__ method in the way when it creates instance not of base class
         but of automatically generated class which inherits from all its extensions.
 
             >>> [b.__name__ for b in my_obj.__class__.__bases__]
@@ -207,8 +275,8 @@ class Extensible(object):
             >>> my_obj_2.my_method_2()
             Method 2
 
-            # and objects created before definition of new extension will still
-            # be same. new new methods or changed attributes
+        and objects created before definition of new extension will
+        not be changed, they will not get new methods or attributes from new extensions
 
             >>> my_obj.my_attr
             42

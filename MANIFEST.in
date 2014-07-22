@@ -1,0 +1,2 @@
+include README.md LICENSE extend_me.py
+global-exclude *.swp *.swo
