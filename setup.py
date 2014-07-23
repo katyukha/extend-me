@@ -63,6 +63,7 @@ setup(
         'six',
     ],
     license="GPL",
+    py_modules=['extend_me'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
