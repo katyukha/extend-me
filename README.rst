@@ -1,3 +1,5 @@
+.. image:: https://travis-ci.org/katyukha/extend-me.svg?branch=master
+
 Extend Me - Class based extension/plugin library
 ================================================
 
