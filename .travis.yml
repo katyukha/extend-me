@@ -8,3 +8,4 @@ python:
 install: "pip install six"
 # command to run tests
 script: python extend_me.py -v
+
