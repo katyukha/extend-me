@@ -7,7 +7,7 @@ python:
 # command to install dependencies
 install: "pip install six coveralls"
 # command to run tests
-script: coverage --source=extend_me.py run extend_me.py -v
+script: coverage run --source=extend_me.py extend_me.py -v
 
 after_success:
   coveralls
