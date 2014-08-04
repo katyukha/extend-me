@@ -101,19 +101,19 @@ instances of base class. Let's see it in example::
     >>> class MyCoolClass(Extensible):
     ...     my_attr_1 = 25
     ...     def my_method1(self, arg1):
-    ...         print 'Hello,', arg1
+    ...         print('Hello, %s' % arg1)
 
     >>> class MyCoolClassExtension1(MyCoolClass):
     ...     def my_method1(self, arg1):
     ...         super(MyCoolClassExtension1, self).my_method1(arg1.upper())
     ...
     ...     def my_method2(self, arg1):
-    ...         print "Good by, %s" % arg1
+    ...         print("Good by, %s" % arg1)
 
 And now using simply instances of base class You have all abilities that provided by extensions::
 
     >>> my_cool_obj = MyCoolClass()
-    >>> print my_cool_obj.my_attr_1
+    >>> print(my_cool_obj.my_attr_1)
     25
     >>> my_cool_obj.my_method1('World')
     Hello, WORLD

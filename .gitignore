@@ -9,3 +9,4 @@
 /venv/
 /extend_me.egg-info/
 .ropeproject
+/.coverage
