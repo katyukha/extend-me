@@ -142,11 +142,12 @@ __author__ = "Dmytro Katyukha <firemage.dima@gmail.com>"
 __version__ = "1.0.0"
 
 import six
-__all__ = ('ExtensibleType', 'Extensible')
+import collections
+__all__ = ('ExtensibleType', 'Extensible', 'ExtensibleByHashType', )
 
 
 class ExtensibleType(type):
-    """ Metaclass for Extandable objects
+    """ Metaclass for Extensible objects
 
         To make object (class) extendable just use this as metaclass:
 
@@ -187,13 +188,17 @@ class ExtensibleType(type):
         if getattr(cls, '_generated', False):
             return cls
 
+        mcs._add_base_class(cls)
+
+        return cls
+
+    @classmethod
+    def _add_base_class(mcs, cls):
         # Do all magic only if subclass had defined required attributes
         if getattr(mcs, '_cls_name', None):
             if cls not in mcs._base_classes:
                 mcs._base_classes.insert(0, cls)
                 mcs._generated_class = None  # Clean cache
-
-        return cls
 
     @classmethod
     def _(mcs, cls_name="Object"):
@@ -209,22 +214,161 @@ class ExtensibleType(type):
         return EXType
 
     @classmethod
-    def _get_base_classes(mcs):
-        """ Returns list of classes to be as base classses for generated one
-        """
-        return mcs._base_classes
-
-    @classmethod
-    def _get_class(mcs):
-        return type(mcs._cls_name, tuple(mcs._get_base_classes()), {'_generated': True})
-
-    @classmethod
     def get_class(mcs):
         """ Generates new class to gether logic of all available extensions
         """
         if mcs._generated_class is None:
-            mcs.__generated_class = mcs._get_class()
-        return mcs.__generated_class
+            cls = type(mcs._cls_name, tuple(mcs._base_classes), {'_generated': True})
+            mcs._generated_class = cls
+        return mcs._generated_class
+
+
+class ExtensibleByHashType(ExtensibleType):
+    """ Metaclass for extensible object that allows
+        to build extension trees. This may be useful in
+        situations where there is some set of similar objects
+        which in some cases my behave diferently, which looks
+        like all of them have same base class and some set of
+        subclasses for each situation. For example we have
+        some set of services which have same protocol, but we
+        would like to code some aditional logic for each service.
+        In this case we could build next architecture
+
+        At first define metaclass which will control building extensions
+            >>> mc = ExtensibleByHashType._("MyCoolClass", hashattr='name')
+
+        Then define base class which represents common inteface for each service
+            >>> @six.add_metaclass(mc)
+            ... class ServiceBase(object):
+            ...     def do_reduce(self, f, *args):
+            ...         # Think that here is call to remote server by API for example
+            ...         # simple reduce is taken only to test that inheritance works fine
+            ...         it = iter(args)
+            ...         res = next(it)
+            ...         for x in it:
+            ...             res = f(res, x)
+            ...         return res
+
+        Try define service:
+            >>> class ServiceAddition(ServiceBase):
+            ...     class Meta:
+            ...         name = 'Addition'
+            ...
+            ...     def add(self, a, b):
+            ...         return self.do_reduce(lambda x,y: x+y, a, b)
+
+        Define second service
+            >>> class ServiceMul(ServiceBase):
+            ...     class Meta:
+            ...         name = 'Mul'
+            ...
+            ...     def mul(self, a, b):
+            ...         return self.do_reduce(lambda x,y: x*y, a, b)
+
+        And let's check what we have now
+            >>> adder = mc.get_class('Addition')()
+            >>> adder.do_reduce(lambda x,y: x+y, 2, 5)
+            7
+            >>> adder.add(2, 5)
+            7
+            >>> adder.mul(2, 5)
+            Traceback (most recent call last):
+            ...
+            AttributeError: 'MyCoolClass' object has no attribute 'mul'
+            >>> adder.do_reduce(lambda x, y: x * y, 2, 5)
+            10
+            >>> multiplier = mc.get_class('Mul')()
+            >>> multiplier.do_reduce(lambda x, y: x * y, 2, 5)
+            10
+            >>> multiplier.do_reduce(lambda x,y: x+y, 2, 5)
+            7
+            >>> multiplier.mul(2, 5)
+            10
+            >>> multiplier.add(2, 5)
+            Traceback (most recent call last):
+            ...
+            AttributeError: 'MyCoolClass' object has no attribute 'add'
+
+        Let's try to get unregistered service
+            >>> srv = mc.get_class('X')()
+            Traceback (most recent call last):
+            ...
+            ValueError: There is no class registered for key 'X'
+            >>> srv = mc.get_class('X', default=True)()
+            >>> srv.do_reduce(lambda x,y: x+y, 2, 5)
+            7
+
+        And now let's check what base classes were used to build each instance of
+        service
+
+            >>> [b.__name__ for b in adder.__class__.__bases__]
+            ['ServiceAddition', 'ServiceBase']
+            >>> [b.__name__ for b in multiplier.__class__.__bases__]
+            ['ServiceMul', 'ServiceBase']
+            >>> [b.__name__ for b in srv.__class__.__bases__]
+            ['ServiceBase']
+
+        Check if get_registered_names works fine:
+
+            >>> mc.get_registered_names()
+            ['Addition', 'Mul']
+    """
+    @classmethod
+    def _get_base_classes(mcs, name=None):
+        if name is None:
+            return mcs._base_classes
+        return mcs._base_classes_hash[name] + mcs._base_classes
+
+    @classmethod
+    def _add_base_class(mcs, cls):
+        # Do all magic only if subclass had defined required attributes
+        if getattr(mcs, '_base_classes_hash', None) is not None:
+            meta = getattr(cls, 'Meta', None)
+            _hash = getattr(meta, mcs._hashattr, None)
+            if _hash is None and cls not in mcs._get_base_classes():
+                mcs._base_classes.insert(0, cls)
+                mcs._generated_class = {}  # Cleanup all caches
+            elif _hash is not None and cls not in mcs._get_base_classes(_hash):
+                mcs._base_classes_hash[_hash].insert(0, cls)
+                mcs._generated_class[_hash] = None
+
+    @classmethod
+    def _(mcs, cls_name='Object', hashattr='_name'):
+        """ Method to generate real metaclass to be used
+
+            @param cls_name: name of generated class
+            @param hashattr: name of class attribute to be used as hash
+        """
+        extype = super(ExtensibleByHashType, mcs)._(cls_name=cls_name)
+
+        class EXHType(extype):
+            _hashattr = hashattr
+            _base_classes_hash = collections.defaultdict(list)
+            _generated_class = {}  # Override it by dict to store diferent
+                                   # base generated class for each hash
+        return EXHType
+
+    @classmethod
+    def get_class(mcs, name, default=False):
+        """ Generates new class to gether logic of all available extensions
+
+            @param _hash: key to get class for
+            @param default: if set to True will generate default class for
+                            if there no special class defined for such key
+        """
+        if default is False and name not in mcs._base_classes_hash:
+            raise ValueError("There is no class registered for key '%s'" % name)
+        if mcs._generated_class.get(name, None) is None:
+            cls = type(mcs._cls_name, tuple(mcs._get_base_classes(name)), {'_generated': True})
+            mcs._generated_class[name] = cls
+        return mcs._generated_class[name]
+
+    @classmethod
+    def get_registered_names(mcs):
+        """ Return's list of names (keys) registered in this tree.
+            For each name specific classes exists
+        """
+        return [k for k, v in six.iteritems(mcs._base_classes_hash) if v]
 
 
 class TMeta(ExtensibleType):

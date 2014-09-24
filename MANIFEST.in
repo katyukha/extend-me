@@ -1,2 +1,2 @@
-include README.md LICENSE extend_me.py
+include README.rst LICENSE CHANGELOG extend_me.py
 global-exclude *.swp *.swo
