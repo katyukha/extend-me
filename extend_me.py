@@ -310,7 +310,7 @@ class ExtensibleByHashType(ExtensibleType):
 
         Check if get_registered_names works fine:
 
-            >>> mc.get_registered_names()
+            >>> sorted(mc.get_registered_names())
             ['Addition', 'Mul']
     """
     @classmethod
