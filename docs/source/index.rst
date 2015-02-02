@@ -7,6 +7,27 @@ Welcome to Extend Me's documentation!
 =====================================
 
 .. automodule:: extend_me
+
+
+ClassReference
+==============
+
+.. autoclass:: extend_me.ExtensibleType
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: _
+ 
+
+.. autoclass:: extend_me.ExtensibleByHashType
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: _
+
+.. autoclass:: extend_me.Extensible
     :members:
     :undoc-members:
     :show-inheritance:

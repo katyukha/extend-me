@@ -31,7 +31,7 @@ in two ways:
           which will construct class based on all defined extensions
           using multiple inhertance
 
-    - Implicit (by using Extensible class which use metaclass 
+    - Implicit (by using Extensible class which use metaclass
       magic implicitly)
 
         - *Extensible* class takes care of all metaclass magic
@@ -99,6 +99,108 @@ It can do all that base class can, and all that extensions can::
     1
 
 
+ExtensibleByHashType
+~~~~~~~~~~~~~~~~~~~~
+
+Same as *ExtensibleType*, but allows to build tree of classes
+for diferent names (types). Just look examples below.
+
+First, create metaclass that will specify inheritance rules::
+
+    >>> import six  # Used for Python 2/3 compatability
+    >>> mc = ExtensibleByHashType._("Connector", hashattr='name')
+
+Here we see aditional parametr in _ method: ``hashattr='name'``
+which describes what meta attribute will be used as key(hash).
+
+Next step - we have to create Base class with this metaclass.
+As example we will look into connection classes of *openerp_proxy* project::
+
+    >>> @six.add_metaclass(mc)
+    ... class ConnectorBase(object):
+    ...     # Base class for all connectors
+    ...
+    ...     def __init__(self, host, port, verbose=False):
+    ...         self.host = host
+    ...         self.port = port
+    ...         self.verbose = verbose
+    ...
+    ...     def _get_service(self, name):
+    ...         raise NotImplementedError
+    ...
+    ...     def get_service(self, name):
+    ...         # Returns service for specified *name*
+    ...         return self._get_service(name)
+
+Base class describes only interface, and may be some part of abstract logic
+And as next step we will extend it in diferent ways to support different
+connection types::
+
+    >>> class ConnectorXMLRPC(ConnectorBase):
+    ...     # XML-RPC connector
+    ...     class Meta:
+    ...         name = 'xml-rpc' # remember definition of metaclass?
+    ...                          # this attribute is used as hash(key)
+    ...                          # to unique identify each banch of extensions
+    ...                          # of base class
+    ...
+    ...     def __init__(self, *args, **kwargs):
+    ...         super(ConnectorXMLRPC, self).__init__(*args, **kwargs)
+    ...         self.__services = {}
+    ...
+    ...     def get_service_url(self, service_name):
+    ...         return 'http://%s:%s/xmlrpc/%s' % (self.host, self.port, service_name)
+    ...
+    ...     def _get_service(self, name):
+    ...         service = self.__services.get(name, False)
+    ...         if service is False:
+    ...             service = XMLRPCProxy(self.get_service_url(name), verbose=self.verbose)
+    ...             self.__services[name] = service
+    ...         return service
+    ...
+    ...
+    ... # Pay attention on base class.
+    >>> class ConnectorXMLRPCS(ConnectorXMLRPC):
+    ...     # XML-RPCS Connector
+    ...     class Meta:
+    ...         name = 'xml-rpcs'
+    ...
+    ...     def get_service_url(self, service_name):
+    ...         return 'https://%s:%s/xmlrpc/%s' % (self.host, self.port, service_name)
+
+Code above creates two connectors: one for *XML-RPC* and one for *XML-RPCS*.
+Each of connectors may be extended by simple inheritance. And if required any
+extension may define new branch(key)(hash) as wee see in example above.
+
+To use this connector *mc* has method *get_class(name[, default=False])*
+wich will return class generated for hash=*name*::
+
+    >>> cls = mc.get_class('xml-rpc')
+    >>> [b.__name__ for b in cls.__bases__]
+    ['ConnectorXMLRPC', 'ConnectorBase']
+    >>> cls.__name__
+    'Connector'
+
+    >>> cls = mc.get_class('xml-rpcs')
+    >>> [b.__name__ for b in cls.__bases__]
+    ['ConnectorXMLRPCS', 'ConnectorBase']
+    >>> cls.__name__
+    'Connector'
+
+Example above shows what classes will be generated for specified names.
+By default, if *mc.get_class* called with unregistered name
+(No extension with ``Meta.name == name`` defined) it will raise *ValueError*
+
+If You want to allow creating of classes with not *Meta.name* defined,
+just pass ``default=True`` to *mc.get_class*::
+
+    >>> cls = mc.get_class('unexisting-protocol', default=True)
+    >>> [b.__name__ for b in cls.__bases__]
+    ['ConnectorBase']
+    >>> cls.__name__
+    'Connector'
+
+
 Extensible
 ~~~~~~~~~~
 
@@ -128,3 +230,4 @@ And now using simply instances of base class You have all abilities that provide
     Hello, WORLD
     >>> my_cool_obj.my_method2('World')
     Good by, World
+

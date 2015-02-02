@@ -1,2 +1,4 @@
+VERSION 1.1.1
+   * Fixed bug with double initialization of classes when used *Extensible* class
 VERSION 1.1.0
    * Added ExtensibleByHashType
