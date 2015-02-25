@@ -243,10 +243,11 @@ And now using simply instances of base class You have all abilities that provide
 #
 
 __author__ = "Dmytro Katyukha <firemage.dima@gmail.com>"
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 
 import six
 import collections
+import abc
 __all__ = ('ExtensibleType', 'Extensible', 'ExtensibleByHashType', )
 
 
@@ -298,6 +299,61 @@ class ExtensibleType(type):
             >>> obj = cls()
             >>> obj.method1()
             'Test'
+            >>> obj2 = mc.get_object()
+            >>> obj2.method1()
+            'Test'
+
+        Next try to use ABC with this class::
+
+            >>> import collections
+            >>> amc = ExtensibleType._("TestABC", with_meta=abc.ABCMeta)
+            >>> @six.add_metaclass(amc)
+            ... class ABCSequence(collections.Sequence):
+            ...    def __init__(self, seq):
+            ...        self.seq = seq
+            ...    def __getitem__(self, index):
+            ...        return self.seq[index]
+            ...    def __len__(self):
+            ...        return len(self.seq)
+            >>> seq = amc.get_class()([1, 1, 2])
+
+        And now check if Sequence logic forks fine::
+
+            >>> seq[1]
+            1
+            >>> seq[2]
+            2
+            >>> seq[3]
+            Traceback (most recent call last):
+            ...
+            IndexError: list index out of range
+            >>> len(seq)
+            3
+            >>> 1 in seq
+            True
+            >>> 3 in seq
+            False
+            >>> seq.count(2)
+            1
+            >>> seq.count(1)
+            2
+            >>> [i for i in seq]
+            [1, 1, 2]
+
+        And let's try to build extension::
+
+            >>> class NABCSequence(ABCSequence):
+            ...     def count2(self, *args, **kwargs):
+            ...         return self.count(*args, **kwargs)*2
+
+            >>> # Get object with all extensions applied
+            >>> seq2 = amc.get_object([1, 1, 2])
+            >>> seq2.count2(1)
+            4
+            >>> seq2.count2(2)
+            2
+            >>> seq2.count(1)
+            2
     """
     def __new__(mcs, name, bases, attrs):
         cls = super(ExtensibleType, mcs).__new__(mcs, name, bases, attrs)
@@ -318,27 +374,57 @@ class ExtensibleType(type):
                 mcs._generated_class = None  # Clean cache
 
     @classmethod
-    def _(mcs, cls_name="Object"):
-        """ Method to generate real metaclass to be used
+    def _(mcs, cls_name="Object", with_meta=None):
+        """ Method to generate real metaclass to be used::
+
+                mc = ExtensibleType._("MyClass")  # note this line
+                @six.add_metaclass(mc)
+                class MyClassBase(object):
+                    pass
 
             :param str cls_name: name of generated class
+            :param class with_meta: Mix aditional metaclass in. (default: None)
             :return: specific metaclass to track new inheritance tree
         """
-        class EXType(mcs):
-            _cls_name = cls_name
-            _base_classes = []
-            _generated_class = None
+        if with_meta is not None:
+            class EXType(with_meta, mcs):
+                _cls_name = cls_name
+                _base_classes = []
+                _generated_class = None
+        else:
+            class EXType(mcs):
+                _cls_name = cls_name
+                _base_classes = []
+                _generated_class = None
 
         return EXType
 
     @classmethod
     def get_class(mcs):
         """ Generates new class to gether logic of all available extensions
+            ::
+
+                mc = ExtensibleType._("MyClass")
+                @six.add_metaclass(mc)
+                class MyClassBase(object):
+                    pass
+                MyClass = mc.get_class()   # get class with all extensions enabled
+
         """
         if mcs._generated_class is None:
             cls = type(mcs._cls_name, tuple(mcs._base_classes), {'_generated': True})
             mcs._generated_class = cls
         return mcs._generated_class
+
+    @classmethod
+    def get_object(mcs, *args, **kwargs):
+        """ Creates new object with all extensions applied
+
+            all *args* and *keyword arguments* will be forwarded to generated class constructor
+
+            Same as ``.get_class()(*args, **kwargs)``
+        """
+        return mcs.get_class()(*args, **kwargs)
 
 
 class ExtensibleByHashType(ExtensibleType):
@@ -430,6 +516,45 @@ class ExtensibleByHashType(ExtensibleType):
 
             >>> sorted(mc.get_registered_names())
             ['Addition', 'Mul']
+
+        And the simple example of integration with ABC (or other metaclassess)::
+
+            >>> mc = ExtensibleByHashType._("TestABC", with_meta=abc.ABCMeta, hashattr='name')
+            >>> @six.add_metaclass(mc)
+            ... class TestBase(collections.Sequence):
+            ...     def __init__(self, seq):
+            ...         self.seq = seq
+            ...     def __getitem__(self, index):
+            ...         return self.seq[index]
+            ...     def __len__(self):
+            ...         return len(self.seq)
+            ...     def count_x2(self, *args, **kwargs):
+            ...        return self.seq.count(*args, **kwargs) * 2
+            ...
+            >>> class TestX3(TestBase):
+            ...     class Meta:
+            ...         name = 'X3'
+            ...
+            ...     def count_x3(self, *args, **kwargs):
+            ...         return self.seq.count(*args, **kwargs) * 3
+            ...
+            >>> Test = mc.get_class(None, default=True)
+            >>> test = Test([1, 1, 2])
+            >>> test.count(1)
+            2
+            >>> test.count_x2(1)
+            4
+            >>> test.count_x3(1)
+            Traceback (most recent call last):
+            ...
+            AttributeError: 'TestABC' object has no attribute 'count_x3'
+            >>>
+            >>> Test3 = mc.get_class('X3')
+            >>> test3 = Test3([1, 1, 2])
+            >>> test3.count_x3(1)
+            6
+            >>> test3.count_x2(1)
+            4
     """
     @classmethod
     def _get_base_classes(mcs, name=None):
@@ -439,7 +564,7 @@ class ExtensibleByHashType(ExtensibleType):
 
     @classmethod
     def _add_base_class(mcs, cls):
-        """ Adds new class to base classes
+        """ Adds new class *cls* to base classes
         """
         # Do all magic only if subclass had defined required attributes
         if getattr(mcs, '_base_classes_hash', None) is not None:
@@ -453,14 +578,21 @@ class ExtensibleByHashType(ExtensibleType):
                 mcs._generated_class[_hash] = None
 
     @classmethod
-    def _(mcs, cls_name='Object', hashattr='_name'):
+    def _(mcs, cls_name='Object', with_meta=None, hashattr='_name'):
         """ Method to generate real metaclass to be used
+            ::
+
+                mc = ExtensibleByHashType._("MyClass", hashattr='name')  # note this line
+                @six.add_metaclass(mc)
+                class MyClassBase(object):
+                    pass
 
             :param str cls_name: name of generated class
+            :param class with_meta: Mix aditional metaclass in. (default: None)
             :param hashattr: name of class Meta attribute to be used as hash. default='_name'
             :return: specific metaclass to track new inheritance tree
         """
-        extype = super(ExtensibleByHashType, mcs)._(cls_name=cls_name)
+        extype = super(ExtensibleByHashType, mcs)._(cls_name=cls_name, with_meta=with_meta)
 
         class EXHType(extype):
             _hashattr = hashattr
@@ -472,6 +604,19 @@ class ExtensibleByHashType(ExtensibleType):
     @classmethod
     def get_class(mcs, name, default=False):
         """ Generates new class to gether logic of all available extensions
+            ::
+
+                mc = ExtensibleByHashType._("MyClass", hashattr='name')  # note this line
+                @six.add_metaclass(mc)
+                class MyClassBase(object):
+                    pass
+
+                class MyClassX1(MyClassBase):
+                    class Meta:
+                        name = 'X1'
+
+                MyClass = mc.get_class(None, default=True)  # get default class
+                MyX1 = mc.get_class('X1')                   # get specific class
 
             :param name: key to get class for
             :param bool default: if set to True will generate default class for
@@ -484,6 +629,12 @@ class ExtensibleByHashType(ExtensibleType):
             cls = type(mcs._cls_name, tuple(mcs._get_base_classes(name)), {'_generated': True})
             mcs._generated_class[name] = cls
         return mcs._generated_class[name]
+
+    @classmethod
+    def get_object(mcs, *args, **kwargs):
+        """ **Not implemented!!!**
+        """
+        raise NotImplementedError("this method does not implemented for ExtensibleByHashType class")
 
     @classmethod
     def get_registered_names(mcs):
@@ -558,9 +709,10 @@ class TMeta(ExtensibleType):
         if getattr(extensible_meta, '_extensible_meta_base', False):
             return super(TMeta, mcs).__new__(mcs, name, bases, attrs)
 
+        with_meta = getattr(extensible_meta, 'with_meta', None)
         # If we create class that is subclass of 'Extensible' or other root class
         # do all the magic
-        mc = mcs._(name)  # Generate metaclass for class to be created
+        mc = mcs._(name, with_meta=with_meta)  # Generate metaclass for class to be created
         mc._extensible_meta_done = True  # Add attribute that means "not futher extension magic required"
         if six.PY2:
             attrs['__metaclass__'] = mc  # set newly generated metaclass for this object
@@ -660,6 +812,7 @@ class Extensible(object):
             >>> z1 = ZBase()
             >>> z1.counter
             1
+
     """
     class ExtensibleMeta:
         _extensible_meta_base = True
