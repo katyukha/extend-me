@@ -243,7 +243,7 @@ And now using simply instances of base class You have all abilities that provide
 #
 
 __author__ = "Dmytro Katyukha <firemage.dima@gmail.com>"
-__version__ = "1.1.2"
+__version__ = "1.1.3"
 
 import six
 import collections
@@ -819,7 +819,7 @@ class Extensible(object):
 
     def __new__(cls, *args, **kwargs):
         if getattr(cls, '_generated', False):
-            return super(Extensible, cls).__new__(cls, *args, **kwargs)
+            return super(Extensible, cls).__new__(cls)
         gcls = type(cls).get_class()
         return gcls.__new__(gcls, *args, **kwargs)
 
