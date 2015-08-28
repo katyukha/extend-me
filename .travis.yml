@@ -5,6 +5,8 @@ python:
   - "3.2"
   - "3.3"
   - "3.4"
+  - "3.5"
+
 # command to install dependencies
 install: "pip install six coveralls"
 # command to run tests
