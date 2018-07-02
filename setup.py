@@ -17,7 +17,7 @@ setup(
     #packages=[],
     #scripts=[],
     install_requires=[
-        'six',
+        'six>=1.9',
     ],
     license="GPL",
     py_modules=['extend_me'],
