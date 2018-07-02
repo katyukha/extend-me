@@ -77,7 +77,8 @@ Just subclass previously defined class::
 So... at this momet we have base class and extension. And here is that
 core magic occures. Metaclass that was created at the begining automaticaly
 collects all subclasses of base class. So it is posible now to create new
-class that is subclass of all subclasses of base class using multiple inheritance.
+class that is subclass of all subclasses of base class using
+multiple inheritance.
 And metaclass *mc* will do it for You::
 
     >>> cls = mc.get_class()
@@ -142,12 +143,15 @@ connection types::
     ...         self.__services = {}
     ...
     ...     def get_service_url(self, service_name):
-    ...         return 'http://%s:%s/xmlrpc/%s' % (self.host, self.port, service_name)
+    ...         return 'http://%s:%s/xmlrpc/%s' % (self.host,
+    ...                                            self.port,
+    ...                                            service_name)
     ...
     ...     def _get_service(self, name):
     ...         service = self.__services.get(name, False)
     ...         if service is False:
-    ...             service = XMLRPCProxy(self.get_service_url(name), verbose=self.verbose)
+    ...             service = XMLRPCProxy(self.get_service_url(name),
+    ...                                   verbose=self.verbose)
     ...             self.__services[name] = service
     ...         return service
     ...
@@ -159,7 +163,9 @@ connection types::
     ...         name = 'xml-rpcs'
     ...
     ...     def get_service_url(self, service_name):
-    ...         return 'https://%s:%s/xmlrpc/%s' % (self.host, self.port, service_name)
+    ...         return 'https://%s:%s/xmlrpc/%s' % (self.host,
+    ...                                             self.port,
+    ...                                             service_name)
 
 Code above creates two connectors: one for XML-RPC and one for XML-RPCS.
 Each of connectors may be extended by simple inheritance. And if required any
@@ -197,10 +203,11 @@ just pass ``default=True`` to *mc.get_class*::
 Extensible
 ~~~~~~~~~~
 
-This class provides one more level of abstraction, allowing to hide all metaclass magic
-behide the scene. So, using it You don't need to worry about metaclasses and class
-creation process. Just inherit extensions form base class, and use in Your program
-instances of base class. Let's see it in example::
+This class provides one more level of abstraction, allowing to hide
+all metaclass magic behide the scene. So, using it You don't need to worry
+about metaclasses and class creation process. Just inherit extensions
+from base class, and use in Your program instances of base class.
+Let's see it in example::
 
     >>> class MyCoolClass(Extensible):
     ...     my_attr_1 = 25
@@ -214,7 +221,8 @@ instances of base class. Let's see it in example::
     ...     def my_method2(self, arg1):
     ...         print("Good by, %s" % arg1)
 
-And now using simply instances of base class You have all abilities that provided by extensions::
+And now using simply instances of base class You have all abilities
+that provided by extensions::
 
     >>> my_cool_obj = MyCoolClass()
     >>> print(my_cool_obj.my_attr_1)
@@ -383,7 +391,8 @@ class ExtensibleType(type):
                     pass
 
             :param str cls_name: name of generated class
-            :param class with_meta: Mix aditional metaclass in. (default: None)
+            :param class with_meta: Mix aditional metaclass in.
+                                    (default: None)
             :return: specific metaclass to track new inheritance tree
         """
         if with_meta is not None:
@@ -408,19 +417,24 @@ class ExtensibleType(type):
                 @six.add_metaclass(mc)
                 class MyClassBase(object):
                     pass
-                MyClass = mc.get_class()   # get class with all extensions enabled
+
+                # get class with all extensions enabled
+                MyClass = mc.get_class()
 
         """
         if mcs._generated_class is None:
-            cls = type(mcs._cls_name, tuple(mcs._base_classes), {'_generated': True})
-            mcs._generated_class = cls
+            mcs._generated_class = type(
+                mcs._cls_name,
+                tuple(mcs._base_classes),
+                {'_generated': True})
         return mcs._generated_class
 
     @classmethod
     def get_object(mcs, *args, **kwargs):
         """ Creates new object with all extensions applied
 
-            all *args* and *keyword arguments* will be forwarded to generated class constructor
+            all *args* and *keyword arguments* will be forwarded
+            to generated class constructor
 
             Same as ``.get_class()(*args, **kwargs)``
         """
@@ -431,7 +445,7 @@ class ExtensibleByHashType(ExtensibleType):
     """ Metaclass for extensible object that allows
         to build extension trees. This may be useful in
         situations where there is some set of similar objects
-        which in some cases my behave diferently, which looks
+        which in some cases may behave diferently, which looks
         like all of them have same base class and some set of
         subclasses for each situation. For example we have
         some set of services which have same protocol, but we
@@ -441,12 +455,14 @@ class ExtensibleByHashType(ExtensibleType):
         At first define metaclass which will control building extensions
             >>> mc = ExtensibleByHashType._("MyCoolClass", hashattr='name')
 
-        Then define base class which represents common inteface for each service
+        Then define base class which represents common inteface
+        for each service:
             >>> @six.add_metaclass(mc)
             ... class ServiceBase(object):
             ...     def do_reduce(self, f, *args):
-            ...         # Think that here is call to remote server by API for example
-            ...         # simple reduce is taken only to test that inheritance works fine
+            ...         # Think that here is call to remote server by API.
+            ...         # for example simple reduce is taken only to test
+            ...         # that inheritance works fine
             ...         it = iter(args)
             ...         res = next(it)
             ...         for x in it:
@@ -502,8 +518,8 @@ class ExtensibleByHashType(ExtensibleType):
             >>> srv.do_reduce(lambda x,y: x+y, 2, 5)
             7
 
-        And now let's check what base classes were used to build each instance of
-        service
+        And now let's check what base classes were used to build
+        each instance of service
 
             >>> [b.__name__ for b in adder.__class__.__bases__]
             ['ServiceAddition', 'ServiceBase']
@@ -517,9 +533,12 @@ class ExtensibleByHashType(ExtensibleType):
             >>> sorted(mc.get_registered_names())
             ['Addition', 'Mul']
 
-        And the simple example of integration with ABC (or other metaclassess)::
+        And the simple example of integration with ABC
+        (or other metaclassess)::
 
-            >>> mc = ExtensibleByHashType._("TestABC", with_meta=abc.ABCMeta, hashattr='name')
+            >>> mc = ExtensibleByHashType._("TestABC",
+            ...                             with_meta=abc.ABCMeta,
+            ...                             hashattr='name')
             >>> @six.add_metaclass(mc)
             ... class TestBase(collections.Sequence):
             ...     def __init__(self, seq):
@@ -582,23 +601,32 @@ class ExtensibleByHashType(ExtensibleType):
         """ Method to generate real metaclass to be used
             ::
 
-                mc = ExtensibleByHashType._("MyClass", hashattr='name')  # note this line
+                # Create metaclass *mc*
+                mc = ExtensibleByHashType._("MyClass", hashattr='name')
+
+                # Create class using *mc* as metaclass
                 @six.add_metaclass(mc)
                 class MyClassBase(object):
                     pass
 
             :param str cls_name: name of generated class
-            :param class with_meta: Mix aditional metaclass in. (default: None)
-            :param hashattr: name of class Meta attribute to be used as hash. default='_name'
+            :param class with_meta: Mix aditional metaclass in.
+                                    (default: None)
+            :param hashattr: name of class Meta attribute to be used as hash.
+                             default='_name'
             :return: specific metaclass to track new inheritance tree
         """
-        extype = super(ExtensibleByHashType, mcs)._(cls_name=cls_name, with_meta=with_meta)
+        extype = super(ExtensibleByHashType, mcs)._(cls_name=cls_name,
+                                                    with_meta=with_meta)
 
         class EXHType(extype):
             _hashattr = hashattr
             _base_classes_hash = collections.defaultdict(list)
-            _generated_class = {}  # Override it by dict to store diferent
-                                   # base generated class for each hash
+
+            # Override it by dict to store diferent
+            # base generated class for each hash
+            _generated_class = {}
+
         return EXHType
 
     @classmethod
@@ -606,35 +634,47 @@ class ExtensibleByHashType(ExtensibleType):
         """ Generates new class to gether logic of all available extensions
             ::
 
-                mc = ExtensibleByHashType._("MyClass", hashattr='name')  # note this line
+                # Create metaclass *mc*
+                mc = ExtensibleByHashType._("MyClass", hashattr='name')
+
+                # Use metaclass *mc* to create base class for extensions
                 @six.add_metaclass(mc)
                 class MyClassBase(object):
                     pass
 
+                # Create extension
                 class MyClassX1(MyClassBase):
                     class Meta:
                         name = 'X1'
 
-                MyClass = mc.get_class(None, default=True)  # get default class
-                MyX1 = mc.get_class('X1')                   # get specific class
+                # get default class
+                MyClass = mc.get_class(None, default=True)
+
+                # get specific class
+                MyX1 = mc.get_class('X1')
 
             :param name: key to get class for
             :param bool default: if set to True will generate default class for
-                            if there no special class defined for such key
+                                 if there no special class defined for such key
             :return: generated class for requested type
         """
         if default is False and name not in mcs._base_classes_hash:
-            raise ValueError("There is no class registered for key '%s'" % name)
+            raise ValueError(
+                "There is no class registered for key '%s'" % name)
         if mcs._generated_class.get(name, None) is None:
-            cls = type(mcs._cls_name, tuple(mcs._get_base_classes(name)), {'_generated': True})
+            cls = type(
+                mcs._cls_name,
+                tuple(mcs._get_base_classes(name)),
+                {'_generated': True})
             mcs._generated_class[name] = cls
         return mcs._generated_class[name]
 
     @classmethod
     def get_object(mcs, *args, **kwargs):
-        """ **Not implemented!!!**
+        """ this method is not implemented for *ExtensibleByHashType* class
         """
-        raise NotImplementedError("this method does not implemented for ExtensibleByHashType class")
+        raise NotImplementedError(
+            "this method is not implemented for ExtensibleByHashType class")
 
     @classmethod
     def get_registered_names(mcs):
@@ -645,10 +685,11 @@ class ExtensibleByHashType(ExtensibleType):
 
 
 class TMeta(ExtensibleType):
-    """ Helper metaclass to implement ability to use same class as bas class for
-        extensions and as class to create objects baed on all extensions of this class
+    """ Helper metaclass to implement ability to use same class as base class
+        for extensions and as class to create objects based on all subclasses
+        of this class
 
-        Used internaly by class Extensible
+        Used internaly by class Extensible class
 
         Example usage:
             >>> @six.add_metaclass(TMeta)
@@ -710,33 +751,41 @@ class TMeta(ExtensibleType):
             return super(TMeta, mcs).__new__(mcs, name, bases, attrs)
 
         with_meta = getattr(extensible_meta, 'with_meta', None)
-        # If we create class that is subclass of 'Extensible' or other root class
-        # do all the magic
-        mc = mcs._(name, with_meta=with_meta)  # Generate metaclass for class to be created
-        mc._extensible_meta_done = True  # Add attribute that means "not futher extension magic required"
+        # If we create class that is subclass of 'Extensible' or\
+        # other root class do all the magi:
+        #  - Generate metaclass for class to be created
+        #  - Add attribute that means "not futher extension magic required"
+        #    (_extensible_meta_done)
+        mc = mcs._(name, with_meta=with_meta)
+        mc._extensible_meta_done = True
         if six.PY2:
-            attrs['__metaclass__'] = mc  # set newly generated metaclass for this object
-        return mc(name, bases, attrs)  # Create new class with generated metaclass
+            # set newly generated metaclass for this object
+            attrs['__metaclass__'] = mc
+        # Create new class with generated metaclass
+        return mc(name, bases, attrs)
 
 
 @six.add_metaclass(TMeta)
 class Extensible(object):
-    """ All direct subclasses of this class will be extensible through inhertance
+    """ All direct subclasses of this class will be extensible through
+        inheritance
 
-        So to create new class that should be extensible just inhert it from this class:
+        So to create new class that should be extensible just inherit it
+        from this class:
 
             >>> class MyClass(Extensible): pass
 
         After this all subclasses of *MyClass* will extend it.
-        For example, create simple extension which will add attribute and method to class:
+        For example, create simple extension which will add attribute and
+        method to class:
 
             >>> class MyClassExtension(MyClass):
             ...     my_attr = 42
             ...     def my_method(self):
             ...         print ("Hello, %s" % self.my_attr)
 
-        After this we expect that attributes and methods defined in extensions will be
-        available in MyClass object:
+        After this we expect that attributes and methods defined in extensions
+        will be available in MyClass object:
 
             >>> my_obj = MyClass()
             >>> my_obj.my_attr
@@ -744,10 +793,12 @@ class Extensible(object):
             >>> my_obj.my_method()
             Hello, 42
 
-        So as we see, we could extend any objects derived from Extensible class using simple
-        inheritence with out any long code. This is useful for plugin or extension systems,
-        making extension work when it just imported. But as disadvantage of this approach,
-        when we ll get error when we try to access attributes of extensions from base class:
+        So as we see, we could extend any objects derived from Extensible
+        class using simple inheritence with out any long code.
+        This is useful for plugin or extension systems,
+        making extension work when it just imported.
+        But as disadvantage of this approach, we will get error when we try
+        to access attributes of extensions from base class:
 
             >>> MyClass.my_attr
             Traceback (most recent call last):
@@ -759,16 +810,20 @@ class Extensible(object):
             ...
             AttributeError: type object 'MyClass' has no attribute 'my_method'
 
-        This happens because *Extensible* class implements some black magic using inheritance and metaclasses.
-        Extensible class have overridden *__new__* method in the way when it creates instance not of base class
-        but of automatically generated class which inherits from all its extensions.
+        This happens because *Extensible* class implements some black magic
+        using inheritance and metaclasses.
+        Extensible class have overridden *__new__* method in the way when
+        it creates instance not of base class but of automatically generated
+        class which inherits from all its extensions.
 
             >>> [b.__name__ for b in my_obj.__class__.__bases__]
             ['MyClassExtension', 'MyClass']
 
-        Thus any behavior of objects created by *MyClass* may be changed by extensions.
-        And as one more thing, extensions that inherits from extensions will be extensions of
-        base class, not extension of extension. So we could do things like:
+        Thus any behavior of objects created by *MyClass* may be changed
+        by extensions. And as one more thing, extensions that inherits from
+        extensions will be extensions of base class,
+        not extension of extension.
+        So we could do things like:
 
             >>> class MyNewExtension(MyClassExtension):
             ...     my_attr = 25
@@ -784,7 +839,8 @@ class Extensible(object):
             Method 2
 
         and objects created before definition of new extension will
-        not be changed, they will not get new methods or attributes from new extensions
+        not be changed, they will not get new methods or attributes
+        from new extensions
 
             >>> my_obj.my_attr
             42

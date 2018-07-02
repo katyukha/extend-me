@@ -8,7 +8,7 @@ _doc = open('README.rst', 'rt').read()
 
 setup(
     name='extend_me',
-    version='1.1.3',  # extend_me.__version__,
+    version='1.1.4',  # extend_me.__version__,
     description='Class based extension/plugin library',
     author='Dmytro Katyukha',
     author_email='firemage.dima@gmail.com',
