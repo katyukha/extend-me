@@ -5,6 +5,7 @@
 - Drop support of Python 3.2
 - Lint fixes
 - Small documentations fixes
+- Changed license to Mozilla Public License 2.0
 
 ## Release 1.1.3
 
