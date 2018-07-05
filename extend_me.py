@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright © 2014-2018 Dmytro Katyukha <dmytro.katyukha@gmail.com>
 
 #######################################################################
@@ -246,7 +247,6 @@ __version__ = "1.1.4"
 
 import six
 import collections
-import abc
 __all__ = ('ExtensibleType', 'Extensible', 'ExtensibleByHashType', )
 
 
@@ -304,6 +304,7 @@ class ExtensibleType(type):
 
         Next try to use ABC with this class::
 
+            >>> import abc
             >>> import collections
             >>> amc = ExtensibleType._("TestABC", with_meta=abc.ABCMeta)
             >>> @six.add_metaclass(amc)
@@ -527,6 +528,7 @@ class ExtensibleByHashType(ExtensibleType):
         And the simple example of integration with ABC
         (or other metaclassess)::
 
+            >>> import abc
             >>> mc = ExtensibleByHashType._("TestABC",
             ...                             with_meta=abc.ABCMeta,
             ...                             hashattr='name')

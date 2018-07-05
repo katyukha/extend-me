@@ -24,18 +24,14 @@ make it simpler, supposing that any subclass of 'Worker' will
 extend it? And this module provides implementation of this
 in two ways:
 
-    - Explicit (by using metaclass *ExtensibleType* directly)
-
-        - When using this way You will heve seperatly Base class
-          to be subclassed by extension classes and class getter
-          which will construct class based on all defined extensions
-          using multiple inhertance
-
-    - Implicit (by using Extensible class which use metaclass
-      magic implicitly)
-
-        - *Extensible* class takes care of all metaclass magic
-          related to generation objects of correct class
+- Explicit (by using metaclass *ExtensibleType* directly)
+    - When using this way You will heve seperatly Base class
+      to be subclassed by extension classes and class getter
+      which will construct class based on all defined extensions
+      using multiple inhertance
+- Implicit (by using Extensible class which use metaclass magic implicitly)
+    - *Extensible* class takes care of all metaclass magic
+        related to generation objects of correct class
 
 
 How it Works
@@ -230,4 +226,3 @@ And now using simply instances of base class You have all abilities that provide
     Hello, WORLD
     >>> my_cool_obj.my_method2('World')
     Good by, World
-
