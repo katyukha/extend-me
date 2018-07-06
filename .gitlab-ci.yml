@@ -61,7 +61,7 @@ pages:
     image: python:alpine
 
     before_script:
-        - pip install sphinx python_lconf_lexer  PSphinxTheme
+        - pip install sphinx
         - python setup.py install
         - apk add --update --no-cache make
     script:
