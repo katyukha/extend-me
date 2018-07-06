@@ -1,9 +1,11 @@
 .. image:: https://travis-ci.org/katyukha/extend-me.svg?branch=master
     :target: https://travis-ci.org/katyukha/extend-me
 
-
 .. image:: https://coveralls.io/repos/katyukha/extend-me/badge.png
     :target: https://coveralls.io/r/katyukha/extend-me
+
+.. image:: https://img.shields.io/badge/docs-passing-brightgreen.svg
+    :target: https://katyukha.gitlab.io/extend-me/
 
 
 Extend Me - Class based extension/plugin library
@@ -24,18 +26,14 @@ make it simpler, supposing that any subclass of 'Worker' will
 extend it? And this module provides implementation of this
 in two ways:
 
-    - Explicit (by using metaclass *ExtensibleType* directly)
-
-        - When using this way You will heve seperatly Base class
-          to be subclassed by extension classes and class getter
-          which will construct class based on all defined extensions
-          using multiple inhertance
-
-    - Implicit (by using Extensible class which use metaclass
-      magic implicitly)
-
-        - *Extensible* class takes care of all metaclass magic
-          related to generation objects of correct class
+- Explicit (by using metaclass *ExtensibleType* directly)
+    - When using this way You will heve seperatly Base class
+      to be subclassed by extension classes and class getter
+      which will construct class based on all defined extensions
+      using multiple inhertance
+- Implicit (by using Extensible class which use metaclass magic implicitly)
+    - *Extensible* class takes care of all metaclass magic
+        related to generation objects of correct class
 
 
 How it Works
@@ -230,4 +228,3 @@ And now using simply instances of base class You have all abilities that provide
     Hello, WORLD
     >>> my_cool_obj.my_method2('World')
     Good by, World
-

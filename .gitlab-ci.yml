@@ -1,0 +1,75 @@
+
+variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
+
+cache:
+    paths:
+        - .cache
+
+stages:
+    - lint
+    - test
+    - pages
+
+flake8:
+    image: python:3.6
+    stage: lint
+    before_script:
+        - pip install flake8
+    script:
+        - flake8 extend_me.py
+
+.tests-default: &test-default-definition
+    stage: test
+    before_script:
+        - pip install six coverage
+    script:
+        - coverage run --source=extend_me extend_me.py -v
+        - coverage report
+        - coverage html -d html-coverage
+    coverage: '/COVERAGE:.*\s+(\d{1,3}\.\d{2}\%)/'
+    artifacts:
+        paths:
+             - html-coverage
+
+tests:py27:
+    image: python:2.7
+    <<: *test-default-definition
+
+tests:py33:
+    image: python:3.3
+    <<: *test-default-definition
+
+tests:py34:
+    image: python:3.4
+    <<: *test-default-definition
+
+tests:py35:
+    image: python:3.5
+    <<: *test-default-definition
+
+tests:py36:
+    image: python:3.6
+    <<: *test-default-definition
+
+tests:py37:
+    image: python:3.7
+    <<: *test-default-definition
+
+pages:
+    stage: pages
+    image: python:alpine
+
+    before_script:
+        - pip install sphinx
+        - python setup.py install
+        - apk add --update --no-cache make
+    script:
+        - cd docs && make html
+        - cd .. && mv docs/build/html public
+    artifacts:
+        paths:
+            - public
+    only:
+        - master
+
