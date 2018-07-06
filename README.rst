@@ -1,9 +1,11 @@
 .. image:: https://travis-ci.org/katyukha/extend-me.svg?branch=master
     :target: https://travis-ci.org/katyukha/extend-me
 
-
 .. image:: https://coveralls.io/repos/katyukha/extend-me/badge.png
     :target: https://coveralls.io/r/katyukha/extend-me
+
+.. image:: https://img.shields.io/badge/docs-passing-brightgreen.svg
+    :target: https://katyukha.gitlab.io/extend-me/
 
 
 Extend Me - Class based extension/plugin library
