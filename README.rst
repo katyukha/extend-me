@@ -6,6 +6,10 @@
 
 .. image:: https://img.shields.io/badge/docs-passing-brightgreen.svg
     :target: https://katyukha.gitlab.io/extend-me/
+    
+.. image:: https://img.shields.io/pypi/dm/extend-me.svg
+    :target: https://pypi.org/project/extend_me/
+    :alt: PyPI - Downloads
 
 
 Extend Me - Class based extension/plugin library
