@@ -8,14 +8,14 @@ _doc = open('README.rst', 'rt').read()
 
 setup(
     name='extend_me',
-    version='1.1.4',
+    version='1.1.5',
     description='Class based extension/plugin library',
     author='Dmytro Katyukha',
     author_email='dmytro.katyukha@gmail.com',
     url='https://github.com/katyukha/extend-me',
     long_description=_doc,
     install_requires=[
-        'six>=1.9',
+        'six>=1.13',
     ],
     license="MPL 2.0",
     py_modules=['extend_me'],
