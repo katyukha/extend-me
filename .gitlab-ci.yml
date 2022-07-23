@@ -56,6 +56,18 @@ tests:py37:
     image: python:3.7
     <<: *test-default-definition
 
+tests:py38:
+    image: python:3.8
+    <<: *test-default-definition
+
+tests:py39:
+    image: python:3.9
+    <<: *test-default-definition
+
+tests:py310:
+    image: python:3.10
+    <<: *test-default-definition
+
 pages:
     stage: pages
     image: python:alpine

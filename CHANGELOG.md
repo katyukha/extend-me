@@ -1,5 +1,9 @@
 # Changelog
 
+## Release 1.1.5
+
+Added support for python versions: 3.8, 3.9, 3.10
+
 ## Release 1.1.4
 
 - Drop support of Python 3.2

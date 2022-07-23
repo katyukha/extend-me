@@ -243,10 +243,11 @@ that provided by extensions::
 
 """
 __author__ = "Dmytro Katyukha <dmytro.katyukha@gmail.com>"
-__version__ = "1.1.4"
+__version__ = "1.1.5"
 
-import six
 import collections
+import six
+
 __all__ = ('ExtensibleType', 'Extensible', 'ExtensibleByHashType', )
 
 
@@ -305,10 +306,10 @@ class ExtensibleType(type):
         Next try to use ABC with this class::
 
             >>> import abc
-            >>> import collections
+            >>> from six.moves import collections_abc
             >>> amc = ExtensibleType._("TestABC", with_meta=abc.ABCMeta)
             >>> @six.add_metaclass(amc)
-            ... class ABCSequence(collections.Sequence):
+            ... class ABCSequence(collections_abc.Sequence):
             ...    def __init__(self, seq):
             ...        self.seq = seq
             ...    def __getitem__(self, index):
@@ -529,11 +530,12 @@ class ExtensibleByHashType(ExtensibleType):
         (or other metaclassess)::
 
             >>> import abc
+            >>> from six.moves import collections_abc
             >>> mc = ExtensibleByHashType._("TestABC",
             ...                             with_meta=abc.ABCMeta,
             ...                             hashattr='name')
             >>> @six.add_metaclass(mc)
-            ... class TestBase(collections.Sequence):
+            ... class TestBase(collections_abc.Sequence):
             ...     def __init__(self, seq):
             ...         self.seq = seq
             ...     def __getitem__(self, index):
