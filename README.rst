@@ -1,5 +1,5 @@
-.. image:: https://travis-ci.org/katyukha/extend-me.svg?branch=master
-    :target: https://travis-ci.org/katyukha/extend-me
+.. image:: https://gitlab.com/katyukha/extend-me/badges/master/pipeline.svg
+    :target: https://gitlab.com/katyukha/extend-me/-/commits/master
 
 .. image:: https://coveralls.io/repos/katyukha/extend-me/badge.png
     :target: https://coveralls.io/r/katyukha/extend-me
